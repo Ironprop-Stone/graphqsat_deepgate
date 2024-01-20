@@ -32,6 +32,7 @@ class CircuitAgent:
 
     def act(self, hist_buffer, eps):
         graph = hist_buffer[-1]
+        eps = 0     # Debug
         if np.random.random() < eps:
             acts = range(len(graph.valid_mask)*2)
             return int(np.random.choice(acts))

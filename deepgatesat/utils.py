@@ -24,7 +24,7 @@ def build_argparser():
     parser.add_argument("--no_eval_separately_on_each", dest="eval_separately_on_each", action="store_false")
     parser.set_defaults(eval_separately_on_each=True)
 
-    parser.add_argument("--eval_problems_paths", default='/root/autodl-tmp/zc/graphqsat_deepgate/aigdata/eval-problems-paths', type=str)
+    parser.add_argument("--eval_problems_paths", default='./aigdata/eval-problems-paths', type=str)
     parser.add_argument("--eval_freq", default=1000, type=int)
     parser.add_argument("--test_time_max_decisions_allowed", default=500, type=int)
 
@@ -38,7 +38,7 @@ def build_argparser():
 
     parser.add_argument("--penalty_size", default=0.1, type=float)
 
-    parser.add_argument("--aig_dir", default='/root/autodl-tmp/zc/graphqsat_deepgate/aigdata/train', type=str)
+    parser.add_argument("--aig_dir", default='./aigdata/train', type=str)
     parser.add_argument("--cnf_dir", default='./cnf', type=str)
     parser.add_argument("--tmp_dir", default='./tmp', type=str)
     
@@ -54,7 +54,7 @@ def build_argparser():
 
     parser.add_argument("--train_max_time_decisions_allowed", type=int, default=500)
 
-    parser.add_argument("--buffer-size", type=int, default=20000)
+    parser.add_argument("--buffer-size", type=int, default=10000)
 
     parser.add_argument("--env_name", type=str, default="sat-v0")
 
@@ -76,7 +76,7 @@ def build_argparser():
 
     parser.add_argument("--history_len", type=int, default=1)
 
-    parser.add_argument("--no_cuda", action="store_false", help="Use the cpu/gpu")
+    parser.add_argument("--no_cuda", action="store_true", help="Use the cpu/gpu")
 
     parser.add_argument("--input_type", type=str, default="ckt")
 
@@ -294,3 +294,6 @@ def evaluate(agent, args, include_train_set=False):
             },
             False,
         )
+
+def one_hot(a, num_classes):
+    return np.squeeze(np.eye(num_classes)[a.reshape(-1)])

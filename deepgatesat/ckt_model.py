@@ -8,6 +8,7 @@ import yaml
 import sys
 import deepgate as dg
 import numpy as np
+from .utils import one_hot
 
 _norm_layer_factory = {
     'batchnorm': nn.BatchNorm1d,
@@ -90,11 +91,15 @@ class ckt_net(nn.Module):
             graph_emb_dict[obs.name] = graph_emb
         else:
             graph_emb = graph_emb_dict[obs.name]
+            
+        # Stone / 01-20: only infer the valid var (var_state == 2)
+        pred_mask = self.mlp(graph_emb[obs.valid_mask])
+        y_pred = pred_mask.reshape(-1)
 
-        y_pred = self.mlp(graph_emb)
-        valid_mask = obs.valid_mask
+        # y_pred = self.mlp(graph_emb)
+        # valid_mask = obs.valid_mask
 
-        return y_pred[valid_mask, :]
+        return y_pred
 
     def forward_batch(self, obs):
         batch_size = len(obs)
@@ -138,9 +143,9 @@ class ckt_net(nn.Module):
         valid_mask = torch.cat([torch.tensor(obs[i].valid_mask) + gather_index[i] for i in range(batch_size)], dim=0)
 
         # forward
-        y_pred = self.mlp(batch_graph_emb)
+        y_pred = self.mlp(batch_graph_emb[valid_mask])
         
-        return y_pred[valid_mask, :]
+        return y_pred
 
     def forward(self, obs):
         # hs: structural embeddings, hf: functional embeddings

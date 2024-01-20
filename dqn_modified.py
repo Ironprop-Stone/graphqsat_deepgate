@@ -93,6 +93,7 @@ if __name__ == '__main__':
         if args.no_cuda or not torch.cuda.is_available()
         else torch.device("cuda")
     )
+    print('Device: ', args.device)
 
     writer = SummaryWriter()
     args.logdir = writer.logdir
@@ -179,8 +180,8 @@ if __name__ == '__main__':
                 if annealed_eps is not None: 
                     step_info["annealed_eps"] = annealed_eps
                     
-                step_info['grad_norm'] = step_info['grad_norm'].numpy().item()
-                step_info['average_q'] = step_info['average_q'].detach().numpy().item()
+                step_info['grad_norm'] = step_info['grad_norm'].cpu().numpy().item()
+                step_info['average_q'] = step_info['average_q'].cpu().detach().numpy().item()
                 
                 jsonlist.append(step_info)
                 

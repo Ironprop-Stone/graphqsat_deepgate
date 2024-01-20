@@ -8,6 +8,7 @@ import sys
 
 import glob
 import os
+import torch
 
 from utils.aiger_utils import xdata_to_cnf
 from utils.circuit_utils import get_fanin_fanout
@@ -34,7 +35,10 @@ class gym_sat_Env(gym.Env):
         compare_with_restarts=None,
         max_data_limit_per_set=None,
     ):
-
+        # Debug
+        self.run_cnt = 0
+        
+        
         self.problems_paths = [realpath(el) for el in problems_paths.split(":")]
         self.args = args
         self.test_mode = test_mode
@@ -103,6 +107,7 @@ class gym_sat_Env(gym.Env):
             self.aig_parser = dg.AigParser()
 
         self.aig = None
+        self.first_round = True
 
     def new_parse_state_as_graph(self):
         (
@@ -133,8 +138,6 @@ class gym_sat_Env(gym.Env):
         # 问题：var_assignments中有些变量值为2，但是不在clauses的列表元素中，说明可能已经被消去了，我们要去掉这些元素
         # 根据clauses里真正存在的变量确定变量个数num_var、valid_decisions、valid_vars、valid_remapping等变量
 
-        num_var = sum([1 for idx, el in enumerate(var_assignments) if el == 2 and idx in clause_valid_vars])
-
         valid_decisions = [
             el
             for i in range(len(var_assignments))
@@ -155,6 +158,19 @@ class gym_sat_Env(gym.Env):
         # 利用已有变量构造observation—用掩码的形式存储哪些PI或者gate需要进行赋值
         self.aig.valid_mask = valid_vars
         self.aig.valid_decisions = valid_decisions
+        # Variable state: -1 - not vaild, 0 - assign to negative, 1 - assign to positive, 2 - not assigned
+        self.aig.var_state = []
+        for idx in range(len(var_assignments)):
+            if var_assignments[idx] == 0:
+                self.aig.var_state.append(0)
+            elif var_assignments[idx] == 1:
+                self.aig.var_state.append(1)
+            else:
+                if idx in valid_vars:
+                    self.aig.var_state.append(2)
+                else:
+                    self.aig.var_state.append(-1)
+        self.aig.var_state = torch.tensor(self.aig.var_state, dtype=torch.int8)
 
         if self.S.getDone():
             return copy.deepcopy(self.aig), True
